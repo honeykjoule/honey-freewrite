@@ -437,7 +437,7 @@ struct ContentView: View {
                             // Check if backspace limiter is enabled and the key is backspace (keyCode 51)
                             if self.disableBackspace && event.keyCode == 51 {
                                 // Play system beep as feedback
-                                NSSound.beep()
+                                // NSSound.beep()
                                 // Return nil to consume the event and prevent backspace
                                 return nil
                             }
@@ -594,7 +594,7 @@ struct ContentView: View {
                                 UserDefaults.standard.set(disableBackspace, forKey: "disableBackspace")
                             }) {
                                 HStack(spacing: 4) {
-                                    Image(systemName: disableBackspace ? "delete.left.fill" : "delete.left")
+                                    Image(systemName: disableBackspace ? "delete.left" : "delete.left.fill")
                                         .font(.system(size: 13))
                                     // Text(disableBackspace ? "Backspace Blocked" : "Backspace Allowed")
                                     //     .font(.system(size: 13))
