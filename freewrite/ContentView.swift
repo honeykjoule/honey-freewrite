@@ -613,7 +613,7 @@ struct ContentView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: disableBackspace ? "delete.left.fill" : "delete.left")
                                         .font(.system(size: 13))
-                                    Text(disableBackspace ? "No Backspace" : "Allow Backspace")
+                                    Text(disableBackspace ? "Backspace Blocked" : "Backspace Allowed")
                                         .font(.system(size: 13))
                                 }
                             }
