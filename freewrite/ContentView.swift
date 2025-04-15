@@ -594,10 +594,9 @@ struct ContentView: View {
                                 UserDefaults.standard.set(disableBackspace, forKey: "disableBackspace")
                             }) {
                                 HStack(spacing: 4) {
+                                    // delete icon filled when backspace allowed
                                     Image(systemName: disableBackspace ? "delete.left" : "delete.left.fill")
                                         .font(.system(size: 13))
-                                    // Text(disableBackspace ? "Backspace Blocked" : "Backspace Allowed")
-                                    //     .font(.system(size: 13))
                                 }
                             }
                             .buttonStyle(.plain)
