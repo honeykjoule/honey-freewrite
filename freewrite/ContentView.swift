@@ -607,6 +607,16 @@ struct ContentView: View {
                             
                             Text("•")
                                 .foregroundColor(.gray)
+
+                            // llama complete button
+                            Button("Complete") {
+                                streamToLlamaAndAppend()
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(textColor)
+
+                            Text("•")
+                                .foregroundColor(.gray)
                             
                             Button("Chat") {
                                 showingChatMenu = true
@@ -1053,6 +1063,19 @@ struct ContentView: View {
             saveEntry(entry: newEntry)
         }
     }
+
+    private func streamToLlamaAndAppend() {
+        let prompt = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let client = LlamaStreamClient()
+        client.sendPrompt(prompt: prompt) { token in
+            DispatchQueue.main.async {
+                text += token
+            }
+        }
+    }
+
+
     
     private func openChatGPT() {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1305,4 +1328,75 @@ extension NSView {
 
 #Preview {
     ContentView()
+}
+
+class LlamaStreamClient: NSObject, URLSessionDataDelegate {
+    private var task: URLSessionDataTask?
+    private var buffer = ""
+
+    private var onToken: ((String) -> Void)?
+
+    func sendPrompt(prompt: String, onToken: @escaping (String) -> Void) {
+        self.onToken = onToken
+
+        guard let url = URL(string: "http://127.0.0.1:8080/completion") else {
+            print("Invalid llama.cpp URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "prompt": prompt,
+            "stream": true,
+            "n_predict": 200,
+            "temperature": 0.8
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            print("Failed to encode JSON: \(error)")
+            return
+        }
+
+        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+        task = session.dataTask(with: request)
+        task?.resume()
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        guard let chunk = String(data: data, encoding: .utf8) else { return }
+
+        buffer += chunk
+
+        while let range = buffer.range(of: "\n") {
+            let line = String(buffer[..<range.lowerBound])
+            buffer = String(buffer[range.upperBound...])
+
+            if line.hasPrefix("data: ") {
+                let payload = line.replacingOccurrences(of: "data: ", with: "")
+                if let token = parseToken(from: payload) {
+                    DispatchQueue.main.async {
+                        self.onToken?(token)
+                    }
+                }
+            }
+        }
+    }
+
+    private func parseToken(from jsonString: String) -> String? {
+        guard let data = jsonString.data(using: .utf8) else { return nil }
+        do {
+            if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let content = dict["content"] as? String {
+                return content
+            }
+        } catch {
+            // likely end-of-stream / malformed JSON
+        }
+        return nil
+    }
 }
