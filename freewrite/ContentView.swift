@@ -454,23 +454,6 @@ struct ContentView: View {
                                     .allowsHitTesting(false)
                                     .offset(x: 5, y: placeholderOffset)
                             }
-                            
-                            if disableBackspace {
-                                VStack {
-                                    Spacer()
-                                    HStack {
-                                        Spacer()
-                                        Text("BACKSPACE DISABLED")
-                                            .font(.system(size: 10))
-                                            .padding(4)
-                                            .background(Color.red.opacity(0.2))
-                                            .cornerRadius(4)
-                                            .foregroundColor(.red.opacity(0.8))
-                                            .padding(.trailing, 8)
-                                            .padding(.bottom, 8)
-                                    }
-                                }
-                            }
                         }
                     )
                 
@@ -613,8 +596,8 @@ struct ContentView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: disableBackspace ? "delete.left.fill" : "delete.left")
                                         .font(.system(size: 13))
-                                    Text(disableBackspace ? "Backspace Blocked" : "Backspace Allowed")
-                                        .font(.system(size: 13))
+                                    // Text(disableBackspace ? "Backspace Blocked" : "Backspace Allowed")
+                                    //     .font(.system(size: 13))
                                 }
                             }
                             .buttonStyle(.plain)
