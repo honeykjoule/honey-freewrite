@@ -84,6 +84,9 @@ struct ContentView: View {
     @State private var isHoveringHistoryArrow = false
     @State private var colorScheme: ColorScheme = .light // Add state for color scheme
     @State private var isHoveringThemeToggle = false // Add state for theme toggle hover
+    // backspace-limiter
+    @State private var disableBackspace: Bool = true  // Default to enabled
+    @State private var isHoveringBackspaceToggle: Bool = false  // For hover effect
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     let entryHeight: CGFloat = 40
     
@@ -154,6 +157,17 @@ struct ContentView: View {
         // Load saved color scheme preference
         let savedScheme = UserDefaults.standard.string(forKey: "colorScheme") ?? "light"
         _colorScheme = State(initialValue: savedScheme == "dark" ? .dark : .light)
+        // Load backspace limiter preference
+        if UserDefaults.standard.object(forKey: "disableBackspace") == nil {
+            // First launch - set default to true (backspace disabled)
+            _disableBackspace = State(initialValue: true)
+            // Save the default
+            UserDefaults.standard.set(true, forKey: "disableBackspace")
+        } else {
+            // Use saved preference
+            let savedBackspaceDisabled = UserDefaults.standard.bool(forKey: "disableBackspace")
+            _disableBackspace = State(initialValue: savedBackspaceDisabled)
+        }
     }
     
     // Modify getDocumentsDirectory to use cached value
@@ -418,6 +432,18 @@ struct ContentView: View {
                     .onAppear {
                         placeholderText = placeholderOptions.randomElement() ?? "\n\nBegin writing"
                         // Removed findSubview code which was causing errors
+                        // Add local monitor for keyDown events backspace-limiter
+                        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                            // Check if backspace limiter is enabled and the key is backspace (keyCode 51)
+                            if self.disableBackspace && event.keyCode == 51 {
+                                // Play system beep as feedback
+                                NSSound.beep()
+                                // Return nil to consume the event and prevent backspace
+                                return nil
+                            }
+                            // Otherwise, pass the event through
+                            return event
+                        }
                     }
                     .overlay(
                         ZStack(alignment: .topLeading) {
@@ -425,12 +451,27 @@ struct ContentView: View {
                                 Text(placeholderText)
                                     .font(.custom(selectedFont, size: fontSize))
                                     .foregroundColor(colorScheme == .light ? .gray.opacity(0.5) : .gray.opacity(0.6))
-                                    // .padding(.top, 8)
-                                    // .padding(.leading, 8)
                                     .allowsHitTesting(false)
                                     .offset(x: 5, y: placeholderOffset)
                             }
-                        }, alignment: .topLeading
+                            
+                            if disableBackspace {
+                                VStack {
+                                    Spacer()
+                                    HStack {
+                                        Spacer()
+                                        Text("BACKSPACE DISABLED")
+                                            .font(.system(size: 10))
+                                            .padding(4)
+                                            .background(Color.red.opacity(0.2))
+                                            .cornerRadius(4)
+                                            .foregroundColor(.red.opacity(0.8))
+                                            .padding(.trailing, 8)
+                                            .padding(.bottom, 8)
+                                    }
+                                }
+                            }
+                        }
                     )
                 
                 VStack {
@@ -563,6 +604,30 @@ struct ContentView: View {
                         
                         // Utility buttons (moved to right)
                         HStack(spacing: 8) {
+                            // backspace-limiter
+                            Button(action: {
+                                disableBackspace.toggle()
+                                // Save preference
+                                UserDefaults.standard.set(disableBackspace, forKey: "disableBackspace")
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: disableBackspace ? "delete.left.fill" : "delete.left")
+                                        .font(.system(size: 13))
+                                    Text(disableBackspace ? "No Backspace" : "Allow Backspace")
+                                        .font(.system(size: 13))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(isHoveringBackspaceToggle ? textHoverColor : textColor)
+                            .onHover { hovering in
+                                isHoveringBackspaceToggle = hovering
+                                isHoveringBottomNav = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
                             Button(timerButtonTitle) {
                                 let now = Date()
                                 if let lastClick = lastClickTime,
