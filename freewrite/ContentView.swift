@@ -432,7 +432,10 @@ struct ContentView: View {
                     .onAppear {
                         placeholderText = placeholderOptions.randomElement() ?? "\n\nBegin writing"
                         // Removed findSubview code which was causing errors
+
                         // Add local monitor for keyDown events backspace-limiter
+                        // NSEvent monitor: safe to install here since ContentView appears once.
+                        // If view lifecycle changes, make sure this doesn't install multiple times.
                         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                             // Check if backspace limiter is enabled and the key is backspace (keyCode 51)
                             if self.disableBackspace && event.keyCode == 51 {
@@ -589,29 +592,6 @@ struct ContentView: View {
                         
                         // Utility buttons (moved to right)
                         HStack(spacing: 8) {
-                            // backspace-limiter
-                            Button(action: {
-                                disableBackspace.toggle()
-                                // Save preference
-                                UserDefaults.standard.set(disableBackspace, forKey: "disableBackspace")
-                            }) {
-                                HStack(spacing: 4) {
-                                    // delete icon filled when backspace allowed
-                                    Image(systemName: disableBackspace ? "delete.left" : "delete.left.fill")
-                                        .font(.system(size: 13))
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundColor(isHoveringBackspaceToggle ? textHoverColor : textColor)
-                            .onHover { hovering in
-                                isHoveringBackspaceToggle = hovering
-                                isHoveringBottomNav = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.push()
-                                } else {
-                                    NSCursor.pop()
-                                }
-                            }
                             Button(timerButtonTitle) {
                                 let now = Date()
                                 if let lastClick = lastClickTime,
@@ -770,7 +750,34 @@ struct ContentView: View {
                             
                             Text("•")
                                 .foregroundColor(.gray)
-                            
+                                
+                            // backspace-limiter
+                            Button(action: {
+                                disableBackspace.toggle()
+                                // Save preference
+                                UserDefaults.standard.set(disableBackspace, forKey: "disableBackspace")
+                            }) {
+                                HStack(spacing: 4) {
+                                    // delete icon filled when backspace allowed
+                                    Image(systemName: disableBackspace ? "delete.left" : "delete.left.fill")
+                                        .font(.system(size: 13))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(isHoveringBackspaceToggle ? textHoverColor : textColor)
+                            .onHover { hovering in
+                                isHoveringBackspaceToggle = hovering
+                                isHoveringBottomNav = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
+
+                            Text("•")
+                                .foregroundColor(.gray)
+
                             // Theme toggle button
                             Button(action: {
                                 colorScheme = colorScheme == .light ? .dark : .light
