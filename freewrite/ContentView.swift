@@ -49,7 +49,7 @@ struct ContentView: View {
     @State private var text: String = ""  // Remove initial welcome text since we'll handle it in createNewEntry
     
     @State private var isFullscreen = false
-    @State private var selectedFont: String = "Lato-Regular"
+    @State private var selectedFont: String = "CourierPrime-Regular"
     @State private var currentRandomFont: String = ""
     @State private var timeRemaining: Int = 900  // Changed to 900 seconds (15 minutes)
     @State private var timerIsRunning = false
@@ -92,7 +92,7 @@ struct ContentView: View {
     @State private var isHoveringBackspaceToggle: Bool = false  // For hover effect
     
     let availableFonts = NSFontManager.shared.availableFontFamilies
-    let standardFonts = ["Lato-Regular", "Arial", ".AppleSystemUIFont", "Times New Roman"]
+    let standardFonts = ["Lato-Regular", "CourierPrime-Regular", ".AppleSystemUIFont", "Times New Roman"]
     let fontSizes: [CGFloat] = [16, 18, 20, 22, 24, 26]
     let placeholderOptions = [
         "\n\nBegin writing",
@@ -520,14 +520,14 @@ struct ContentView: View {
                             Text("•")
                                 .foregroundColor(.gray)
                             
-                            Button("Arial") {
-                                selectedFont = "Arial"
+                            Button("Courier Prime") {
+                                selectedFont = "CourierPrime-Regular"
                                 currentRandomFont = ""
                             }
                             .buttonStyle(.plain)
-                            .foregroundColor(hoveredFont == "Arial" ? textHoverColor : textColor)
+                            .foregroundColor(hoveredFont == "Courier Prime" ? textHoverColor : textColor)
                             .onHover { hovering in
-                                hoveredFont = hovering ? "Arial" : nil
+                                hoveredFont = hovering ? "Courier Prime" : nil
                                 isHoveringBottomNav = hovering
                                 if hovering {
                                     NSCursor.pointingHand.push()
